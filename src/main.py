@@ -3,6 +3,7 @@ Vidurai Proxy Server - Main Entry Point
 Universal AI memory management proxy server
 """
 
+import os
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,12 +24,16 @@ session_manager = None
 metrics_tracker = None
 terminal_ui = None
 
+# Detect serverless environment (Vercel, AWS Lambda, etc.)
+IS_SERVERLESS = os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("LAMBDA_TASK_ROOT")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Application lifespan manager
     Handles startup and shutdown
+    NOTE: Disabled in serverless environments
     """
     global config, session_manager, metrics_tracker, terminal_ui
 
@@ -75,12 +80,12 @@ async def lifespan(app: FastAPI):
     logger.info("Vidurai Proxy Server shutdown complete")
 
 
-# Create FastAPI app
+# Create FastAPI app (disable lifespan in serverless)
 app = FastAPI(
     title="Vidurai Proxy Server",
     description="Universal AI Memory Management Proxy",
     version="1.1.0",
-    lifespan=lifespan
+    lifespan=lifespan if not IS_SERVERLESS else None
 )
 
 # CORS middleware
