@@ -151,12 +151,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# ════════════════════════════════════════════════════════════
-# Vercel Serverless Function Export
-# ════════════════════════════════════════════════════════════
-# This makes the FastAPI app work with Vercel's serverless functions
-from mangum import Mangum
-
-handler = Mangum(app)
