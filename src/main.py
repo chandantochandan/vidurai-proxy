@@ -88,6 +88,22 @@ app = FastAPI(
     lifespan=lifespan if not IS_SERVERLESS else None
 )
 
+# Initialize components for serverless (no lifespan support)
+if IS_SERVERLESS:
+    logger.info("Serverless environment detected - initializing components directly")
+    config = load_config()
+    # Disable file-based persistence in serverless
+    config.session.persist_memory = False
+
+    provider_detector = ProviderDetector(config)
+    session_manager = SessionManager(config)
+    metrics_tracker = MetricsTracker(config)
+    terminal_ui = TerminalUI(config)
+
+    # Initialize routes with components
+    init_routes(config, provider_detector, session_manager, metrics_tracker, terminal_ui)
+    logger.info("Serverless initialization complete")
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
