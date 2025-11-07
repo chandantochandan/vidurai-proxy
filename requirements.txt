@@ -4,8 +4,9 @@
 # Core Web Framework
 # ════════════════════════════════════════════════════════════
 fastapi==0.121.0              # Modern async web framework
-uvicorn==0.38.0               # ASGI server
+uvicorn[standard]==0.31.1     # ASGI server (updated for Vercel)
 python-multipart==0.0.20      # Form data parsing
+mangum==0.18.0                # ASGI → AWS Lambda adapter (for Vercel)
 
 # ════════════════════════════════════════════════════════════
 # Vidurai Core
@@ -22,6 +23,7 @@ httpx==0.28.1                 # Async HTTP client
 # ════════════════════════════════════════════════════════════
 pyyaml==6.0.3                 # YAML config parser
 pydantic==2.12.4              # Data validation
+python-dotenv==1.0.1          # Environment variable management
 
 # ════════════════════════════════════════════════════════════
 # Logging & Terminal UI
