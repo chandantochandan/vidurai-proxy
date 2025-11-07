@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Vidurai Proxy Server",
     description="Universal AI Memory Management Proxy",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan
 )
 
@@ -98,7 +98,7 @@ async def root():
     """Root endpoint with server info"""
     return {
         "service": "Vidurai Proxy Server",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "status": "running",
         "docs": "/docs",
         "health": "/health",

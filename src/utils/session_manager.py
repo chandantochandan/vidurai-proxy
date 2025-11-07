@@ -12,7 +12,7 @@ from typing import Dict, Optional
 from datetime import datetime, timedelta
 from loguru import logger
 
-from vidurai import ViduraiMemory
+from vidurai import VismritiMemory
 from vidurai.core.rl_agent_v2 import RewardProfile
 
 class SessionManager:
@@ -35,7 +35,7 @@ class SessionManager:
             config: Config object from config_loader
         """
         self.config = config
-        self.sessions: Dict[str, ViduraiMemory] = {}
+        self.sessions: Dict[str, VismritiMemory] = {}
         self.last_activity: Dict[str, datetime] = {}
 
         # Create session directory
@@ -48,15 +48,15 @@ class SessionManager:
         if config.session.persist_memory:
             self._load_persisted_sessions()
 
-    def get_session(self, session_id: str) -> ViduraiMemory:
+    def get_session(self, session_id: str) -> VismritiMemory:
         """
-        Get or create Vidurai instance for session
+        Get or create Vismriti instance for session
 
         Args:
             session_id: Unique session identifier
 
         Returns:
-            ViduraiMemory instance for this session
+            VismritiMemory instance for this session
         """
 
         # Update activity timestamp
@@ -82,12 +82,12 @@ class SessionManager:
 
         return vidurai
 
-    def _create_vidurai_instance(self) -> ViduraiMemory:
+    def _create_vidurai_instance(self) -> VismritiMemory:
         """
-        Create new Vidurai instance from config settings
+        Create new Vismriti instance from config settings
 
         Returns:
-            Configured ViduraiMemory instance
+            Configured VismritiMemory instance
         """
 
         # Map config profile string to RewardProfile enum
@@ -104,21 +104,28 @@ class SessionManager:
             RewardProfile.QUALITY_FOCUSED
         )
 
-        # Create ViduraiMemory with config settings
-        vidurai = ViduraiMemory(
-            enable_compression=self.config.vidurai.compression_enabled,
+        # Create VismritiMemory with config settings
+        # Note: Gist extraction is optional (requires OPENAI_API_KEY), disable for now
+        # RL agent provides compression via learned policies
+        memory = VismritiMemory(
+            enable_gist_extraction=False,  # Optional feature, requires OpenAI API key
             enable_decay=self.config.vidurai.enable_decay,
-            reward_profile=reward_profile
+            enable_rl_agent=True  # Enable RL agent to use reward profile
         )
+
+        # Configure RL agent with reward profile if enabled
+        if memory.rl_agent:
+            memory.rl_agent.reward_profile = reward_profile
 
         logger.debug(
-            f"Created ViduraiMemory instance: "
+            f"Created VismritiMemory instance: "
             f"profile={self.config.vidurai.reward_profile}, "
             f"decay={self.config.vidurai.enable_decay}, "
-            f"compression={self.config.vidurai.compression_enabled}"
+            f"gist_extraction=False (optional), "
+            f"rl_agent=True"
         )
 
-        return vidurai
+        return memory
 
     def generate_session_id(self, api_key: str) -> str:
         """
@@ -194,7 +201,7 @@ class SessionManager:
             logger.error(f"Failed to persist session {session_id[:8]}...: {e}")
             return False
 
-    def _load_session_from_disk(self, session_id: str) -> Optional[ViduraiMemory]:
+    def _load_session_from_disk(self, session_id: str) -> Optional[VismritiMemory]:
         """
         Load session from disk
 
@@ -202,7 +209,7 @@ class SessionManager:
             session_id: Session to load
 
         Returns:
-            ViduraiMemory instance or None if not found/error
+            VismritiMemory instance or None if not found/error
         """
         session_file = self.session_dir / f"{session_id}.pkl"
 

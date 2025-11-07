@@ -10,7 +10,7 @@ python-multipart==0.0.20      # Form data parsing
 # ════════════════════════════════════════════════════════════
 # Vidurai Core
 # ════════════════════════════════════════════════════════════
-vidurai==1.5.1                # Vidurai memory system
+vidurai==1.6.1                # Vidurai memory system with Vismriti Architecture
 
 # ════════════════════════════════════════════════════════════
 # HTTP Client (for forwarding to AI providers)
