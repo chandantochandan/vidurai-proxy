@@ -1,13 +1,12 @@
 """
-Simplified Vercel Handler
-Minimal version for debugging
+Vercel FastAPI Handler
+Vercel's Python runtime handles ASGI apps directly - no Mangum needed!
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from mangum import Mangum
 
-# Create minimal FastAPI app
+# Create FastAPI app - Vercel will automatically detect and serve it
 app = FastAPI(
     title="Vidurai Proxy Server",
     description="Universal AI Memory Management Proxy",
@@ -30,7 +29,7 @@ async def root():
         "service": "Vidurai Proxy Server",
         "version": "1.1.0",
         "status": "running",
-        "mode": "serverless-minimal"
+        "mode": "vercel-native"
     }
 
 @app.get("/health")
@@ -41,6 +40,3 @@ async def health():
         "service": "vidurai-proxy",
         "version": "1.1.0"
     }
-
-# Vercel handler
-handler = Mangum(app)
