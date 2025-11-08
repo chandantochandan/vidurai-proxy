@@ -182,11 +182,17 @@ async def proxy_request(request: Request, path: str):
                 elapsed_ms=elapsed_ms
             )
 
-        # 7. Return response
+        # 7. Return response (fix: remove compression headers)
+        response_headers = dict(response.headers)
+        # Remove headers that cause issues when response is already decompressed
+        response_headers.pop('content-encoding', None)
+        response_headers.pop('content-length', None)  # Length changes after decompression
+        response_headers.pop('transfer-encoding', None)
+
         return Response(
             content=response.content,
             status_code=response.status_code,
-            headers=dict(response.headers)
+            headers=response_headers
         )
 
     except Exception as e:
