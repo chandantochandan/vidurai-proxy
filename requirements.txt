@@ -2,7 +2,6 @@
 fastapi==0.121.0
 uvicorn[standard]==0.31.1
 python-multipart==0.0.20
-mangum==0.18.0
 
 # Vidurai Memory Management
 vidurai==1.6.1
