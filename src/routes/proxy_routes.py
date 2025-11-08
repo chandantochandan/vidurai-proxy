@@ -304,7 +304,12 @@ async def _process_with_vidurai(
         session_total_saved=session_metrics.tokens_saved
     )
 
-    # Update request with optimized messages
-    request_data['messages'] = optimized_messages
+    # Update request with recalled context + current message
+    if optimized_messages:
+        # Prepend recalled context, keep current message at end
+        request_data['messages'] = optimized_messages + [messages[-1]]
+    else:
+        # No recalled memories, just send current messages as-is
+        request_data['messages'] = messages
 
     return request_data, original_tokens, compressed_tokens
