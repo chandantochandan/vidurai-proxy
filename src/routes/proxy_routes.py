@@ -232,9 +232,9 @@ def _should_process_through_vidurai(path: str, request_data: dict) -> bool:
     if 'messages' not in request_data:
         return False
 
-    # Must have multiple messages (need context to compress)
+    # Must have at least one message to process
     messages = request_data.get('messages', [])
-    if len(messages) < 3:  # Need at least 3 messages for compression to make sense
+    if len(messages) < 1:  # Need at least 1 message to process
         return False
 
     return True
