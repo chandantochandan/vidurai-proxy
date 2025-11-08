@@ -101,9 +101,19 @@ async def proxy_request(request: Request, path: str):
     start_time = time.time()
 
     try:
-        # 1. Detect provider
+        # 1. Detect provider and extract API key
+        # Support both 'authorization' and 'x-api-key' headers
         auth_header = request.headers.get("authorization", "")
-        provider = _provider_detector.detect(path, auth_header)
+        if not auth_header:
+            # Anthropic uses x-api-key header
+            api_key = request.headers.get("x-api-key", "")
+            if api_key:
+                auth_header = f"Bearer {api_key}"  # Normalize format
+        else:
+            # Extract key from "Bearer <key>" format if needed
+            api_key = auth_header.replace("Bearer ", "").strip()
+
+        provider = _provider_detector.detect(path, auth_header or api_key)
 
         # Show request received
         _terminal_ui.show_request_received(
@@ -112,8 +122,8 @@ async def proxy_request(request: Request, path: str):
             provider=provider
         )
 
-        # 2. Get session
-        session_id = _session_manager.generate_session_id(auth_header)
+        # 2. Get session (use the actual API key for session ID)
+        session_id = _session_manager.generate_session_id(api_key if 'api_key' in locals() else auth_header)
         vidurai = _session_manager.get_session(session_id)
 
         # 3. Get request body
