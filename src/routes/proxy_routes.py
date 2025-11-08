@@ -265,17 +265,7 @@ async def _process_with_vidurai(
     _terminal_ui.show_processing(len(messages), original_tokens)
     _terminal_ui.show_vidurai_layers()
 
-    # Add messages to Vidurai
-    for msg in messages:
-        vidurai.remember(
-            content=msg.get('content', ''),
-            metadata={
-                'role': msg.get('role'),
-                'session_id': session_id
-            }
-        )
-
-    # Get optimized context
+    # STEP 1: Recall existing memories FIRST (before storing current message)
     query = messages[-1].get('content', '') if messages else ''
     relevant_memories = vidurai.recall(
         query=query,
@@ -283,7 +273,12 @@ async def _process_with_vidurai(
         top_k=20
     )
 
-    # Reconstruct optimized messages
+    # Debug: Log recalled memories
+    logger.info(f"📝 Recalled {len(relevant_memories)} memories from session")
+    for i, mem in enumerate(relevant_memories):
+        logger.info(f"  Memory {i+1}: {(mem.gist or mem.verbatim)[:50]}...")
+
+    # Reconstruct optimized messages from recalled memories
     # Use gist for compression (falls back to verbatim if gist extraction disabled)
     optimized_messages = [
         {
@@ -292,6 +287,16 @@ async def _process_with_vidurai(
         }
         for mem in relevant_memories
     ]
+
+    # STEP 2: Store current messages for FUTURE recalls (after we've recalled existing ones)
+    for msg in messages:
+        vidurai.remember(
+            content=msg.get('content', ''),
+            metadata={
+                'role': msg.get('role'),
+                'session_id': session_id
+            }
+        )
 
     # Estimate compressed token count
     compressed_tokens = sum(len(m['content'].split()) for m in optimized_messages)
@@ -311,5 +316,10 @@ async def _process_with_vidurai(
     else:
         # No recalled memories, just send current messages as-is
         request_data['messages'] = messages
+
+    # Debug: Log messages being sent to Anthropic
+    logger.info(f"📤 Sending {len(request_data['messages'])} messages to Anthropic")
+    for i, msg in enumerate(request_data['messages']):
+        logger.info(f"  Message {i+1} ({msg.get('role', 'unknown')}): {msg.get('content', '')[:50]}...")
 
     return request_data, original_tokens, compressed_tokens
