@@ -266,26 +266,32 @@ async def _process_with_vidurai(
     _terminal_ui.show_vidurai_layers()
 
     # STEP 1: Recall existing memories FIRST (before storing current message)
-    query = messages[-1].get('content', '') if messages else ''
+    # Use empty query to get ALL recent conversation history (not semantic search)
+    # This maintains full context instead of trying to match semantic similarity
+    logger.info(f"🔍 Recalling all recent memories (min_salience=NOISE, top_k=50)")
+
     relevant_memories = vidurai.recall(
-        query=query,
-        min_salience=SalienceLevel.LOW,
-        top_k=20
+        query="",  # Empty query = get all memories, not semantic search
+        min_salience=SalienceLevel.NOISE,  # Get everything
+        top_k=50  # Increased limit for full context
     )
 
     # Debug: Log recalled memories
     logger.info(f"📝 Recalled {len(relevant_memories)} memories from session")
     for i, mem in enumerate(relevant_memories):
-        logger.info(f"  Memory {i+1}: {(mem.gist or mem.verbatim)[:50]}...")
+        content = mem.gist or mem.verbatim
+        logger.info(f"  Memory {i+1} - gist: {mem.gist[:30] if mem.gist else 'None'}, verbatim: {mem.verbatim[:30] if mem.verbatim else 'None'}")
+        logger.info(f"  Memory {i+1} - using: {content[:50] if content else 'EMPTY!'}...")
 
     # Reconstruct optimized messages from recalled memories
     # Use gist for compression (falls back to verbatim if gist extraction disabled)
     optimized_messages = [
         {
             'role': mem.metadata.get('role', 'user'),
-            'content': mem.gist or mem.verbatim
+            'content': mem.gist or mem.verbatim or ""  # Ensure we never have None
         }
         for mem in relevant_memories
+        if (mem.gist or mem.verbatim)  # Only include memories with actual content
     ]
 
     # STEP 2: Store current messages for FUTURE recalls (after we've recalled existing ones)
@@ -297,6 +303,13 @@ async def _process_with_vidurai(
                 'session_id': session_id
             }
         )
+
+    # Debug: Confirm storage
+    logger.info(f"💾 Stored {len(messages)} messages in session {session_id}")
+
+    # Debug: Check total memories in session after storage
+    all_memories = vidurai.recall(query="", min_salience=SalienceLevel.NOISE, top_k=100)
+    logger.info(f"🗄️ Total memories in session after storage: {len(all_memories)}")
 
     # Estimate compressed token count
     compressed_tokens = sum(len(m['content'].split()) for m in optimized_messages)
