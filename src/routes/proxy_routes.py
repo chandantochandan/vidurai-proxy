@@ -284,10 +284,11 @@ async def _process_with_vidurai(
     )
 
     # Reconstruct optimized messages
+    # Use gist for compression (falls back to verbatim if gist extraction disabled)
     optimized_messages = [
         {
             'role': mem.metadata.get('role', 'user'),
-            'content': mem.content
+            'content': mem.gist or mem.verbatim
         }
         for mem in relevant_memories
     ]
