@@ -12,6 +12,7 @@ import time
 from typing import Optional
 from loguru import logger
 
+from vidurai.core.data_structures_v3 import SalienceLevel
 from src.utils.provider_detection import ProviderDetector
 from src.utils.session_manager import SessionManager
 from src.utils.metrics_tracker import MetricsTracker
@@ -278,7 +279,7 @@ async def _process_with_vidurai(
     query = messages[-1].get('content', '') if messages else ''
     relevant_memories = vidurai.recall(
         query=query,
-        min_importance=0.3,
+        min_salience=SalienceLevel.LOW,
         top_k=20
     )
 
